@@ -1,0 +1,5 @@
+/target
+/provision-*
+/Dockerfile
+/bin
+/docker-compose.yml

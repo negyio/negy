@@ -1,0 +1,9 @@
+[package]
+name = "negy-common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+openssl = "0.10"
+bytes = "1.2"

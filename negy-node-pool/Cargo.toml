@@ -1,0 +1,22 @@
+[package]
+name = "negy-node-pool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.21", features = ["full"] }
+anyhow = "1.0"
+clap = { version = "3.2", features = ["derive"] }
+openssl = "0.10"
+warp = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+base64 = "0.13"
+log = "0.4"
+pretty_env_logger = "0.4"
+ctrlc = { version = "3.0", features = ["termination"] }
+negy-common = { path = "../negy-common" }
+
+[[bin]]
+name = "negy-node-pool"
+path = "src/main.rs"

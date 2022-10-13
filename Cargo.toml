@@ -1,0 +1,43 @@
+[package]
+name = "negy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.21", features = ["full"] }
+bytes = "1.2"
+httparse = "1.8"
+anyhow = "1.0"
+clap = { version = "3.2", features = ["derive"] }
+openssl = "0.10"
+warp = "0.3"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+base64 = "0.13"
+rand = "0.8"
+log = "0.4"
+pretty_env_logger = "0.4"
+ctrlc = { version = "3.0", features = ["termination"] }
+negy-common = { path = "./negy-common" }
+negy-node-pool = { path = "./negy-node-pool" }
+
+[workspace]
+members = [
+  "negy-common",
+  "negy-gateway",
+  "negy-node",
+  "negy-node-pool",
+]
+
+[[bin]]
+name = "gateway"
+path = "negy-gateway/src/main.rs"
+
+[[bin]]
+name = "node"
+path = "negy-node/src/main.rs"
+
+[[bin]]
+name = "node-pool"
+path = "negy-node-pool/src/main.rs"
