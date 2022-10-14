@@ -38,7 +38,7 @@ jobs:
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:latest
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:${VERSION}
           build-args:
-            COMPONENT: node-pool
+            COMPONENT=node-pool
       -
         name: Build and push node
         uses: docker/build-push-action@v3
@@ -50,7 +50,7 @@ jobs:
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:latest
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:${VERSION}
           build-args:
-            COMPONENT: node
+            COMPONENT=node
       -
         name: Build and push gateway
         uses: docker/build-push-action@v3
@@ -62,4 +62,4 @@ jobs:
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:latest
             - ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:${VERSION}
           build-args:
-            COMPONENT: gateway
+            COMPONENT=gateway
