@@ -35,7 +35,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:${steps.setversion.outputs.version}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:${{ steps.setversion.outputs.version }}
           build-args:
             COMPONENT=node-pool
       -
@@ -45,7 +45,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:${steps.setversion.outputs.version}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:${{ steps.setversion.outputs.version }}
           build-args:
             COMPONENT=node
       -
@@ -55,6 +55,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:${steps.setversion.outputs.version}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:${{ steps.setversion.outputs.version }}
           build-args:
             COMPONENT=gateway
