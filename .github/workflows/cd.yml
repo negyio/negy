@@ -22,11 +22,12 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
+        id: setversion
         name: Set up version
-        run: echo "VERSION=$(head -n 3 Cargo.toml | tail -n 1 | sed -r 's/^.*\"(.*)\"$/\1/')" >> $GITHUB_ENV
-      -
-        name: Confirm version
-        run: echo "version=${VERSION}"
+        run: |
+          VERSION=`head -n 3 Cargo.toml | tail -n 1 | sed -r 's/^.*\"(.*)\"$/\1/'`
+          echo "version: ${VERSION}"
+          echo "::set-output name=version::${VERSION}"
       -
         name: Build and push node-pool
         uses: docker/build-push-action@v3
@@ -34,7 +35,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:${VERSION}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node-pool:${steps.setversion.outputs.version}
           build-args:
             COMPONENT=node-pool
       -
@@ -44,7 +45,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:${VERSION}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-node:${steps.setversion.outputs.version}
           build-args:
             COMPONENT=node
       -
@@ -54,6 +55,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:${VERSION}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:latest , ${{ secrets.DOCKER_HUB_USERNAME }}/negy-gateway:${steps.setversion.outputs.version}
           build-args:
             COMPONENT=gateway
