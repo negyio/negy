@@ -5,12 +5,14 @@ use std::net::SocketAddr;
 pub struct AddNodeRequest {
     pub port: u16,
     pub public_key: String,
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListedNode {
     pub addr: SocketAddr,
     pub public_key: String,
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
