@@ -22,25 +22,35 @@ struct Args {
     port: u16,
 }
 
+#[derive(Debug, Clone)]
+struct Node {
+    public_key: String,
+    version: String,
+}
+
 #[derive(Debug)]
 struct InvalidParameters;
 
 impl warp::reject::Reject for InvalidParameters {}
 
 async fn list(
-    node_pool: Arc<RwLock<HashMap<SocketAddr, String>>>,
+    node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>>,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let nodes = node_pool.read().unwrap().clone();
     let nodes = nodes
         .into_iter()
-        .map(|(addr, public_key)| ListedNode { addr, public_key })
+        .map(|(addr, node)| ListedNode {
+            addr,
+            public_key: node.public_key,
+            version: node.version,
+        })
         .collect();
 
     Ok(warp::reply::json(&ListNodeResponse { nodes }))
 }
 
 async fn add(
-    node_pool: Arc<RwLock<HashMap<SocketAddr, String>>>,
+    node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>>,
     addr_cloud_front: Option<SocketAddr>,
     addr: Option<SocketAddr>,
     body: AddNodeRequest,
@@ -65,8 +75,17 @@ async fn add(
     Rsa::public_key_from_pem(&public_key_bytes)
         .map_err(|_| warp::reject::custom(InvalidParameters))?;
 
-    if healthcheck_node(&addr, &body.public_key).await.is_ok() {
-        node_pool.write().unwrap().insert(addr, body.public_key);
+    if healthcheck_node(&addr, &body.public_key, &body.version)
+        .await
+        .is_ok()
+    {
+        node_pool.write().unwrap().insert(
+            addr,
+            Node {
+                public_key: body.public_key,
+                version: body.version,
+            },
+        );
         info!("new node has been added {}", addr);
     } else {
         warn!(
@@ -82,30 +101,35 @@ async fn pong() -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply::with_status("ok", warp::http::StatusCode::OK))
 }
 
-async fn healthcheck_node(addr: &SocketAddr, public_key: &str) -> Result<()> {
+async fn healthcheck_node(addr: &SocketAddr, public_key: &str, version: &str) -> Result<()> {
     let mut node = TcpStream::connect(addr).await?;
     let mut bytes = [0; 1024];
     let (mut rx, mut tx) = node.split();
 
-    tx.write_u8(Protocol::PublicKey.symbol_byte()).await?;
+    tx.write_u8(Protocol::NodeContext.symbol_byte()).await?;
 
     let n = rx.read(&mut bytes).await?;
-    let public_key_received = base64::encode(&bytes[..n]);
+    let public_key_received = base64::encode(&bytes[..451]);
+    let version_received = std::str::from_utf8(&bytes[451..n])?;
 
     if public_key_received != public_key {
         bail!("public key mismatch")
     }
 
+    if version != version_received {
+        bail!("version mismatch")
+    }
+
     Ok(())
 }
 
-async fn healthcheck_loop(node_pool: Arc<RwLock<HashMap<SocketAddr, String>>>) -> Result<()> {
+async fn healthcheck_loop(node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>>) -> Result<()> {
     loop {
         let mut removed_count = 0;
         let node_pool_for_iter = node_pool.read().unwrap().clone();
 
-        for (addr, public_key) in node_pool_for_iter.iter() {
-            if let Err(_) = healthcheck_node(addr, public_key).await {
+        for (addr, node) in node_pool_for_iter.iter() {
+            if let Err(_) = healthcheck_node(addr, &node.public_key, &node.version).await {
                 node_pool.write().unwrap().remove(addr);
                 removed_count += 1;
             }
@@ -132,7 +156,7 @@ async fn main() -> Result<()> {
         std::process::exit(1);
     })?;
 
-    let node_pool: Arc<RwLock<HashMap<SocketAddr, String>>> = Arc::new(RwLock::new(HashMap::new()));
+    let node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>> = Arc::new(RwLock::new(HashMap::new()));
     let node_pool_healthcheck = node_pool.clone();
     let node_pool_filter = warp::any().map(move || node_pool.clone());
 
