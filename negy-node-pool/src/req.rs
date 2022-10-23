@@ -13,6 +13,7 @@ pub struct ListedNode {
     pub addr: SocketAddr,
     pub public_key: String,
     pub version: String,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
