@@ -693,6 +693,7 @@ dependencies = [
  "negy-common",
  "openssl",
  "pretty_env_logger",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",

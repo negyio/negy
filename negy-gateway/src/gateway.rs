@@ -26,9 +26,12 @@ pub struct StateTunnel {
     nodes: Vec<Node>,
 }
 
+#[derive(Debug)]
 pub struct NodeUnselected {
     pub addr: SocketAddr,
     pub rsa: Rsa<Public>,
+    pub name: Option<String>,
+    pub version: String,
 }
 
 struct Node {

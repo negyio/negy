@@ -52,6 +52,8 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
         .map(|n| NodeUnselected {
             addr: n.addr,
             rsa: Rsa::public_key_from_pem(&base64::decode(&n.public_key).unwrap()).unwrap(),
+            name: n.name,
+            version: n.version,
         })
         .collect();
 

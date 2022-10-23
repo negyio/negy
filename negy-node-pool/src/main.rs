@@ -7,7 +7,7 @@ use negy_common::protocol::Protocol;
 use negy_node_pool::req::{AddNodeRequest, ListNodeResponse, ListedNode};
 use openssl::rsa::Rsa;
 use std::collections::HashMap;
-use std::net::{SocketAddr, ToSocketAddrs};
+use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
 use std::sync::{Arc, RwLock};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -26,12 +26,20 @@ struct Args {
 struct Node {
     public_key: String,
     version: String,
+    name: Option<String>,
 }
 
 #[derive(Debug)]
 struct InvalidParameters;
 
 impl warp::reject::Reject for InvalidParameters {}
+
+async fn loopup_name(ip: &IpAddr) -> Result<Option<String>> {
+    let url = format!("https://rdap.apnic.net/ip/{}", ip);
+    let res = reqwest::get(url).await?.json::<serde_json::Value>().await?;
+
+    Ok(res["name"].as_str().map(|n| n.to_owned()))
+}
 
 async fn list(
     node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>>,
@@ -43,6 +51,7 @@ async fn list(
             addr,
             public_key: node.public_key,
             version: node.version,
+            name: node.name,
         })
         .collect();
 
@@ -68,6 +77,10 @@ async fn add(
 
     info!("new add request {}", addr);
 
+    let name = loopup_name(&addr.ip())
+        .await
+        .map_err(|_| warp::reject::custom(InvalidParameters))?;
+
     // validate base64 & RSA public key
     let public_key_bytes =
         base64::decode(&body.public_key).map_err(|_| warp::reject::custom(InvalidParameters))?;
@@ -84,6 +97,7 @@ async fn add(
             Node {
                 public_key: body.public_key,
                 version: body.version,
+                name,
             },
         );
         info!("new node has been added {}", addr);
