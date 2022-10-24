@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/negyio/negy/actions/workflows/cd.yml"><img src="https://github.com/negyio/negy/actions/workflows/cd.yml/badge.svg"/></a>
+  <a href="https://github.com/negyio/negy/actions/workflows/cd-dev.yml"><img src="https://github.com/negyio/negy/actions/workflows/cd-dev.yml/badge.svg"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-gateway"><img src="https://img.shields.io/docker/pulls/tbrand/negy-gateway"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-node"><img src="https://img.shields.io/docker/pulls/tbrand/negy-node"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-node-pool"><img src="https://img.shields.io/docker/pulls/tbrand/negy-node-pool"/></a>
