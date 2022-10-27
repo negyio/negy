@@ -11,7 +11,7 @@
   <a href="https://negy.io"><img src="https://img.shields.io/badge/Docs-negy.io-green"/></a>
 <p align="center">
 
-**Negy is a proxy that hides the routing of HTTP requests in a similar way to Tor; through Negy's network, websites have no way of identifying who has accessed them at the network level. It is possible to try Negy with the following commands.**
+**Negy is a proxy that conceals the routing of HTTP requests in a similar way to Tor; through Negy's network, websites have no way of identifying who has accessed them at the network level. It is possible to try Negy with the following commands.**
 
 ```bash
 curl https://example.com -x http://gateway.negy.io
