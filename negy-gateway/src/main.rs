@@ -48,7 +48,8 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
         .await?
         .json::<ListNodeResponse>()
         .await?;
-    let mut nodes_unselected: Vec<NodeUnselected> = res
+    let args = Args::parse();
+    let nodes_unselected: Vec<NodeUnselected> = res
         .nodes
         .into_iter()
         .map(|n| NodeUnselected {
@@ -57,16 +58,8 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             name: n.name,
             version: n.version,
         })
+        .filter(|n| n.version < args.min_version)
         .collect();
-    //Loop through nodes, and remove any nodes that are below a specific version
-    let args = Args::parse();
-    let mut i = 0;
-    while i < nodes_unselected.len() {
-        if nodes_unselected[i].version < args.min_version {
-            nodes_unselected.remove(i);
-        }
-        i+=1;
-    }
 
     Ok(nodes_unselected)
 }
