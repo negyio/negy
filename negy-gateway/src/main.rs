@@ -22,6 +22,8 @@ struct Args {
     node_pool_endpoint: String,
     #[clap(short, long, value_parser, default_value = "3")]
     hops: usize,
+    #[clap(short, long, value_parser, default_value = "0.1.5")]
+    min_version: String,
 }
 
 async fn spawn_inner(
@@ -46,7 +48,7 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
         .await?
         .json::<ListNodeResponse>()
         .await?;
-    let nodes_unselected: Vec<NodeUnselected> = res
+    let mut nodes_unselected: Vec<NodeUnselected> = res
         .nodes
         .into_iter()
         .map(|n| NodeUnselected {
@@ -56,15 +58,15 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             version: n.version,
         })
         .collect();
-      //Loop through nodes, and remove any nodes that are below a specific version
-      let args = Args::parse();
-      let mut i = 0;
-      while i < nodes_unselected.len() {
-          if nodes_unselected[i].version < args.min_version {
-              nodes_unselected.remove(i);
-          }
-          i+=1;
-     }
+    //Loop through nodes, and remove any nodes that are below a specific version
+    let args = Args::parse();
+    let mut i = 0;
+    while i < nodes_unselected.len() {
+        if nodes_unselected[i].version < args.min_version {
+            nodes_unselected.remove(i);
+        }
+        i+=1;
+    }
 
     Ok(nodes_unselected)
 }
