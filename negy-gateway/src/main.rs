@@ -58,7 +58,7 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             name: n.name,
             version: n.version,
         })
-        .filter(|n| n.version < args.min_version)
+        .filter(|n| n.version >= args.min_version)
         .collect();
 
     Ok(nodes_unselected)
