@@ -22,8 +22,8 @@ struct Args {
     node_pool_endpoint: String,
     #[clap(short, long, value_parser, default_value = "3")]
     hops: usize,
-    #[clap(short, long, value_parser, default_value = "0.1.5")]
-    min_version: String,
+    #[clap(short, long, value_parser)]
+    min_version: Option<String>
 }
 
 async fn spawn_inner(
@@ -58,7 +58,14 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             name: n.name,
             version: n.version,
         })
-        .filter(|n| n.version >= args.min_version)
+        .filter(|n| {
+           if let Some(min_version) = &args.min_version {
+                n.version.parse::<i32>().unwrap() >= min_version.parse::<i32>().unwrap()
+            } else {
+                 true
+            }
+        })
+
         .collect();
 
     Ok(nodes_unselected)
