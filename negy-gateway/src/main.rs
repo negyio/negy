@@ -40,15 +40,13 @@ async fn spawn_inner(
 
     Ok(())
 }
-
-async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnselected>> {
+async fn fetch_nodes_unselected(node_pool_endpoint: &str, min_version: &Option<String>) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
         .send()
         .await?
         .json::<ListNodeResponse>()
         .await?;
-    let args = Args::parse();
     let nodes_unselected: Vec<NodeUnselected> = res
         .nodes
         .into_iter()
@@ -59,26 +57,25 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             version: n.version,
         })
         .filter(|n| {
-           if let Some(min_version) = &args.min_version {
-                n.version.parse::<i32>().unwrap() >= min_version.parse::<i32>().unwrap()
+           if let Some(min_version) = &min_version {
+                &n.version >= min_version
             } else {
                  true
             }
         })
-
         .collect();
 
     Ok(nodes_unselected)
 }
 
-async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize) -> Result<()> {
+async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize, min_version: Option<String>) -> Result<()> {
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
     let listed_nodes_accept = listed_nodes.clone();
 
     tokio::spawn(async move {
         loop {
-            match fetch_nodes_unselected(&node_pool_endpoint).await {
+            match fetch_nodes_unselected(&node_pool_endpoint, &min_version).await {
                 Ok(nodes_unselected) => {
                     info!("fetched {} nodes", nodes_unselected.len());
                     *listed_nodes_fetch.write().unwrap() = nodes_unselected;
@@ -126,7 +123,7 @@ async fn main() -> Result<()> {
 
     let listener = TcpListener::bind(bind_addr).await?;
 
-    spawn(listener, args.node_pool_endpoint, args.hops).await?;
+    spawn(listener, args.node_pool_endpoint, args.hops, args.min_version).await?;
 
     Ok(())
 }
