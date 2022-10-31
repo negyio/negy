@@ -13,7 +13,8 @@ jobs:
           toolchain: stable
       - uses: actions-rs/cargo@v1
         with:
-          command: test -p negy-common
+          command: test
+          args: -p negy-common
       - uses: actions-rs/cargo@v1
         with:
           command: test
