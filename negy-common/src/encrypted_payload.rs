@@ -64,3 +64,72 @@ impl EncryptedPayload {
         Ok(payloads)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encrypted_payload_parse_ends_with_delimiter() {
+        let mut encrypted_payload = EncryptedPayload::new();
+        let delimiter = EncryptedPayload::new_delimiter();
+        let all_zeros = [0; 100];
+
+        let mut raw_payload = vec![];
+        raw_payload.extend_from_slice(&all_zeros);
+        raw_payload.extend_from_slice(&delimiter);
+
+        let parsed_payloads = encrypted_payload.read(&raw_payload, &delimiter).unwrap();
+        assert_eq!(parsed_payloads.len(), 1);
+        assert_eq!(parsed_payloads[0], &all_zeros[..]);
+    }
+
+    #[test]
+    fn encrypted_payload_parse_partial_delimiter() {
+        let mut encrypted_payload = EncryptedPayload::new();
+        let delimiter = EncryptedPayload::new_delimiter();
+        let all_zeros = [0; 100];
+
+        let mut raw_payload = vec![];
+        raw_payload.extend_from_slice(&all_zeros);
+        raw_payload.extend_from_slice(&delimiter[0..DELIMITER_LEN / 2]);
+
+        let parsed_payloads = encrypted_payload.read(&raw_payload, &delimiter).unwrap();
+        assert_eq!(parsed_payloads.len(), 0);
+    }
+
+    #[test]
+    fn encrypted_payload_parse_partial_payload() {
+        let mut encrypted_payload = EncryptedPayload::new();
+        let delimiter = EncryptedPayload::new_delimiter();
+        let all_zeros = [0; 100];
+
+        let mut raw_payload = vec![];
+        raw_payload.extend_from_slice(&all_zeros);
+        raw_payload.extend_from_slice(&delimiter);
+        raw_payload.extend_from_slice(&all_zeros[0..10]);
+
+        let parsed_payloads = encrypted_payload.read(&raw_payload, &delimiter).unwrap();
+        assert_eq!(parsed_payloads.len(), 1);
+        assert_eq!(parsed_payloads[0], &all_zeros[..]);
+    }
+
+    #[test]
+    fn encrypted_payload_parse_multiple_payloads() {
+        let mut encrypted_payload = EncryptedPayload::new();
+        let delimiter = EncryptedPayload::new_delimiter();
+        let all_zeros = [0; 100];
+        let all_ones = [1; 100];
+
+        let mut raw_payload = vec![];
+        raw_payload.extend_from_slice(&all_zeros);
+        raw_payload.extend_from_slice(&delimiter);
+        raw_payload.extend_from_slice(&all_ones);
+        raw_payload.extend_from_slice(&delimiter);
+
+        let parsed_payloads = encrypted_payload.read(&raw_payload, &delimiter).unwrap();
+        assert_eq!(parsed_payloads.len(), 2);
+        assert_eq!(parsed_payloads[0], &all_zeros[..]);
+        assert_eq!(parsed_payloads[1], &all_ones[..]);
+    }
+}
