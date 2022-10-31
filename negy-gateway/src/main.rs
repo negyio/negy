@@ -10,6 +10,7 @@ use negy_node_pool::req::ListNodeResponse;
 use openssl::rsa::Rsa;
 use std::sync::{Arc, RwLock};
 use tokio::net::{TcpListener, TcpStream};
+use semver::Version;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -25,6 +26,7 @@ struct Args {
     #[clap(short, long, value_parser)]
     auth_token: Option<String>,
     min_version: Option<String>,
+
 }
 
 async fn spawn_inner(
@@ -60,7 +62,7 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str, min_version: &Option<S
         })
         .filter(|n| {
            if let Some(min_version) = &min_version {
-                &n.version >= min_version
+                Version::parse(&n.version).unwrap() >= Version::parse(min_version).unwrap()
             } else {
                  true
             }
@@ -77,6 +79,7 @@ async fn spawn(
     auth_token: Option<String>,
     min_version: Option<String>,
 ) -> Result<()> {
+
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
     let listed_nodes_accept = listed_nodes.clone();
@@ -131,6 +134,7 @@ async fn main() -> Result<()> {
     info!("start listening on {}", bind_addr);
 
     let listener = TcpListener::bind(bind_addr).await?;
+
 
     spawn(
         listener,
