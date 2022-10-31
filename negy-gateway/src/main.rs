@@ -23,15 +23,18 @@ struct Args {
     #[clap(short, long, value_parser, default_value = "3")]
     hops: usize,
     #[clap(short, long, value_parser)]
-    min_version: Option<String>
+    auth_token: Option<String>,
+    min_version: Option<String>,
+
 }
 
 async fn spawn_inner(
     client: TcpStream,
     node_pool: Arc<RwLock<Vec<NodeUnselected>>>,
     hops: usize,
+    auth_token: Option<String>,
 ) -> Result<()> {
-    Gateway::new(client)
+    Gateway::new(client, auth_token)
         .fetch_nodes(node_pool.clone(), hops)?
         .handshake()
         .await?
@@ -68,7 +71,14 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str, min_version: &Option<S
     Ok(nodes_unselected)
 }
 
-async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize, min_version: Option<String>) -> Result<()> {
+async fn spawn(
+    listener: TcpListener,
+    node_pool_endpoint: String,
+    hops: usize,
+    auth_token: Option<String>,
+    min_version: Option<String>,
+) -> Result<()> {
+
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
     let listed_nodes_accept = listed_nodes.clone();
@@ -94,9 +104,10 @@ async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize, m
     loop {
         let (client, _) = listener.accept().await?;
         let listed_nodes = listed_nodes_accept.clone();
+        let auth_token_cloned = auth_token.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = spawn_inner(client, listed_nodes, hops).await {
+            if let Err(e) = spawn_inner(client, listed_nodes, hops, auth_token_cloned).await {
                 error!("{:?}", e);
             }
         });
@@ -123,7 +134,15 @@ async fn main() -> Result<()> {
 
     let listener = TcpListener::bind(bind_addr).await?;
 
-    spawn(listener, args.node_pool_endpoint, args.hops, args.min_version).await?;
+
+    spawn(
+        listener,
+        args.node_pool_endpoint,
+        args.hops,
+        args.auth_token,
+        args.min_version
+    )
+    .await?;
 
     Ok(())
 }
