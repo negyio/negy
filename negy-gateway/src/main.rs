@@ -8,6 +8,7 @@ use anyhow::Result;
 use clap::Parser;
 use negy_node_pool::req::ListNodeResponse;
 use openssl::rsa::Rsa;
+use semver::Version;
 use std::sync::{Arc, RwLock};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -24,6 +25,8 @@ struct Args {
     hops: usize,
     #[clap(short, long, value_parser)]
     auth_token: Option<String>,
+    #[clap(short, long, value_parser)]
+    min_version: Option<String>,
 }
 
 async fn spawn_inner(
@@ -41,8 +44,10 @@ async fn spawn_inner(
 
     Ok(())
 }
-
-async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnselected>> {
+async fn fetch_nodes_unselected(
+    node_pool_endpoint: &str,
+    min_version: &Option<String>,
+) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
         .send()
@@ -58,6 +63,13 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
             name: n.name,
             version: n.version,
         })
+        .filter(|n| {
+            if let Some(min_version) = &min_version {
+                Version::parse(&n.version).unwrap() >= Version::parse(min_version).unwrap()
+            } else {
+                true
+            }
+        })
         .collect();
 
     Ok(nodes_unselected)
@@ -68,6 +80,7 @@ async fn spawn(
     node_pool_endpoint: String,
     hops: usize,
     auth_token: Option<String>,
+    min_version: Option<String>,
 ) -> Result<()> {
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
@@ -75,7 +88,7 @@ async fn spawn(
 
     tokio::spawn(async move {
         loop {
-            match fetch_nodes_unselected(&node_pool_endpoint).await {
+            match fetch_nodes_unselected(&node_pool_endpoint, &min_version).await {
                 Ok(nodes_unselected) => {
                     info!("fetched {} nodes", nodes_unselected.len());
                     *listed_nodes_fetch.write().unwrap() = nodes_unselected;
@@ -129,6 +142,7 @@ async fn main() -> Result<()> {
         args.node_pool_endpoint,
         args.hops,
         args.auth_token,
+        args.min_version,
     )
     .await?;
 

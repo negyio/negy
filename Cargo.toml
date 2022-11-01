@@ -21,6 +21,7 @@ pretty_env_logger = "0.4"
 ctrlc = { version = "3.0", features = ["termination"] }
 negy-common = { path = "./negy-common" }
 negy-node-pool = { path = "./negy-node-pool" }
+semver = "1.0.14"
 
 [workspace]
 members = [
