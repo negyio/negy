@@ -1,3 +1,9 @@
+[package]
+name = "negy-gateway"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
 anyhow = "1.0"
 bytes = "1.2"
 clap = { version = "3.2", features = ["derive"] }
@@ -15,6 +21,7 @@ ctrlc = { version = "3.0", features = ["termination"] }
 negy-common = { path = "../negy-common" }
 negy-node-pool = { path = "../negy-node-pool" }
 semver = "1.0.14"
+version-compare = "0.1.0"
 
 [[bin]]
 name = "negy-gateway"
