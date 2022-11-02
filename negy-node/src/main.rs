@@ -27,7 +27,7 @@ async fn spawn_inner(client: TcpStream, rsa: Rsa<Private>) -> Result<()> {
 
     match node.protocol() {
         Protocol::Tunnel => node.handshake().await?.tunnel().await?,
-        Protocol::PublicKey => node.serve_public_key().await?,
+        Protocol::NodeContext => node.serve_context().await?,
     }
 
     Ok(())
@@ -36,9 +36,12 @@ async fn spawn_inner(client: TcpStream, rsa: Rsa<Private>) -> Result<()> {
 async fn add_request(rsa: &Rsa<Private>, port: u16, node_pool_endpoint: &str) -> Result<()> {
     info!("send add/update request to node pool");
 
+    let version: &str = env!("CARGO_PKG_VERSION");
+
     let req = AddNodeRequest {
         port,
         public_key: base64::encode(rsa.public_key_to_pem().unwrap()),
+        version: version.to_owned(),
     };
     let res = reqwest::Client::new()
         .post(format!("{}/add", node_pool_endpoint))

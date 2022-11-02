@@ -13,10 +13,12 @@ use tokio::net::TcpStream;
 
 pub struct StateFetchNodes {
     client: TcpStream,
+    auth_token: Option<String>,
 }
 
 pub struct StateHandshake {
     client: TcpStream,
+    auth_token: Option<String>,
     nodes: Vec<Node>,
 }
 
@@ -26,9 +28,12 @@ pub struct StateTunnel {
     nodes: Vec<Node>,
 }
 
+#[derive(Debug)]
 pub struct NodeUnselected {
     pub addr: SocketAddr,
     pub rsa: Rsa<Public>,
+    pub name: Option<String>,
+    pub version: String,
 }
 
 struct Node {
@@ -44,9 +49,9 @@ pub struct Gateway<State> {
 }
 
 impl Gateway<StateFetchNodes> {
-    pub fn new(client: TcpStream) -> Self {
+    pub fn new(client: TcpStream, auth_token: Option<String>) -> Self {
         Gateway {
-            state: StateFetchNodes { client },
+            state: StateFetchNodes { client, auth_token },
         }
     }
 
@@ -82,6 +87,7 @@ impl Gateway<StateFetchNodes> {
             state: StateHandshake {
                 client: self.state.client,
                 nodes: random_selected_nodes,
+                auth_token: self.state.auth_token,
             },
         })
     }
@@ -161,6 +167,29 @@ impl Gateway<StateHandshake> {
             Some("CONNECT") => {}
             Some(method) => bail!("unsupported method {}. Only CONNECT is supported.", method),
             None => bail!("HTTP method not found in your request."),
+        }
+
+        if self.state.auth_token.is_some() {
+            if let Some(auth) = req
+                .headers
+                .into_iter()
+                .find(|h| h.name.to_lowercase() == "proxy-authorization")
+            {
+                if let Some(v) = auth.value.strip_prefix(b"Basic ") {
+                    let decoded = base64::decode(v)?;
+                    let token = std::str::from_utf8(&decoded)?
+                        .splitn(2, ":")
+                        .collect::<Vec<&str>>()[0];
+
+                    if Some(token.to_owned()) != self.state.auth_token {
+                        bail!("authorization failure (invalid token)")
+                    }
+                } else {
+                    bail!("invalid authorization header")
+                }
+            } else {
+                bail!("authorization token required")
+            }
         }
 
         Ok(req.path.unwrap().to_socket_addrs().unwrap().collect())

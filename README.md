@@ -4,13 +4,14 @@
 
 <p align="center">
   <a href="https://github.com/negyio/negy/actions/workflows/cd.yml"><img src="https://github.com/negyio/negy/actions/workflows/cd.yml/badge.svg"/></a>
+  <a href="https://github.com/negyio/negy/actions/workflows/cd-dev.yml"><img src="https://github.com/negyio/negy/actions/workflows/cd-dev.yml/badge.svg"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-gateway"><img src="https://img.shields.io/docker/pulls/tbrand/negy-gateway"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-node"><img src="https://img.shields.io/docker/pulls/tbrand/negy-node"/></a>
   <a href="https://hub.docker.com/repository/docker/tbrand/negy-node-pool"><img src="https://img.shields.io/docker/pulls/tbrand/negy-node-pool"/></a>
   <a href="https://negy.io"><img src="https://img.shields.io/badge/Docs-negy.io-green"/></a>
 <p align="center">
 
-**Negy is a proxy that hides the routing of HTTP requests in a similar way to Tor; through Negy's network, websites have no way of identifying who has accessed them at the network level. It is possible to try Negy with the following commands.**
+**Negy is a proxy that conceals the routing of HTTP requests in a similar way to Tor; through Negy's network, websites have no way of identifying who has accessed them at the network level. It is possible to try Negy with the following commands.**
 
 ```bash
 curl https://example.com -x http://gateway.negy.io

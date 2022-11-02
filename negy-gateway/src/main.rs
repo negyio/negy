@@ -8,6 +8,7 @@ use anyhow::Result;
 use clap::Parser;
 use negy_node_pool::req::ListNodeResponse;
 use openssl::rsa::Rsa;
+use semver::Version;
 use std::sync::{Arc, RwLock};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -22,14 +23,19 @@ struct Args {
     node_pool_endpoint: String,
     #[clap(short, long, value_parser, default_value = "3")]
     hops: usize,
+    #[clap(short, long, value_parser)]
+    auth_token: Option<String>,
+    #[clap(short, long, value_parser)]
+    min_version: Option<String>,
 }
 
 async fn spawn_inner(
     client: TcpStream,
     node_pool: Arc<RwLock<Vec<NodeUnselected>>>,
     hops: usize,
+    auth_token: Option<String>,
 ) -> Result<()> {
-    Gateway::new(client)
+    Gateway::new(client, auth_token)
         .fetch_nodes(node_pool.clone(), hops)?
         .handshake()
         .await?
@@ -38,8 +44,10 @@ async fn spawn_inner(
 
     Ok(())
 }
-
-async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnselected>> {
+async fn fetch_nodes_unselected(
+    node_pool_endpoint: &str,
+    min_version: &Option<String>,
+) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
         .send()
@@ -52,20 +60,35 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str) -> Result<Vec<NodeUnse
         .map(|n| NodeUnselected {
             addr: n.addr,
             rsa: Rsa::public_key_from_pem(&base64::decode(&n.public_key).unwrap()).unwrap(),
+            name: n.name,
+            version: n.version,
+        })
+        .filter(|n| {
+            if let Some(min_version) = &min_version {
+                Version::parse(&n.version).unwrap() >= Version::parse(min_version).unwrap()
+            } else {
+                true
+            }
         })
         .collect();
 
     Ok(nodes_unselected)
 }
 
-async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize) -> Result<()> {
+async fn spawn(
+    listener: TcpListener,
+    node_pool_endpoint: String,
+    hops: usize,
+    auth_token: Option<String>,
+    min_version: Option<String>,
+) -> Result<()> {
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
     let listed_nodes_accept = listed_nodes.clone();
 
     tokio::spawn(async move {
         loop {
-            match fetch_nodes_unselected(&node_pool_endpoint).await {
+            match fetch_nodes_unselected(&node_pool_endpoint, &min_version).await {
                 Ok(nodes_unselected) => {
                     info!("fetched {} nodes", nodes_unselected.len());
                     *listed_nodes_fetch.write().unwrap() = nodes_unselected;
@@ -84,9 +107,10 @@ async fn spawn(listener: TcpListener, node_pool_endpoint: String, hops: usize) -
     loop {
         let (client, _) = listener.accept().await?;
         let listed_nodes = listed_nodes_accept.clone();
+        let auth_token_cloned = auth_token.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = spawn_inner(client, listed_nodes, hops).await {
+            if let Err(e) = spawn_inner(client, listed_nodes, hops, auth_token_cloned).await {
                 error!("{:?}", e);
             }
         });
@@ -113,7 +137,14 @@ async fn main() -> Result<()> {
 
     let listener = TcpListener::bind(bind_addr).await?;
 
-    spawn(listener, args.node_pool_endpoint, args.hops).await?;
+    spawn(
+        listener,
+        args.node_pool_endpoint,
+        args.hops,
+        args.auth_token,
+        args.min_version,
+    )
+    .await?;
 
     Ok(())
 }

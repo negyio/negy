@@ -611,7 +611,7 @@ dependencies = [
 
 [[package]]
 name = "negy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -626,6 +626,7 @@ dependencies = [
  "pretty_env_logger",
  "rand",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "tokio",
@@ -634,7 +635,7 @@ dependencies = [
 
 [[package]]
 name = "negy-common"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -643,7 +644,7 @@ dependencies = [
 
 [[package]]
 name = "negy-gateway"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -658,6 +659,7 @@ dependencies = [
  "pretty_env_logger",
  "rand",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "tokio",
@@ -665,7 +667,7 @@ dependencies = [
 
 [[package]]
 name = "negy-node"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -683,7 +685,7 @@ dependencies = [
 
 [[package]]
 name = "negy-node-pool"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -693,6 +695,7 @@ dependencies = [
  "negy-common",
  "openssl",
  "pretty_env_logger",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -1076,6 +1079,12 @@ dependencies = [
  "core-foundation-sys",
  "libc",
 ]
+
+[[package]]
+name = "semver"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e25dfac463d778e353db5be2449d1cce89bd6fd23c9f1ea21310ce6e5a1b29c4"
 
 [[package]]
 name = "serde"

@@ -2,19 +2,19 @@ use anyhow::{bail, Result};
 
 pub const PROTOCOL_SYMBOL_LEN: usize = 1;
 pub const TUNNEL: u8 = 1;
-pub const PUBLIC_KEY: u8 = 2;
+pub const NODE_CONTEXT: u8 = 2;
 
 #[derive(Copy, Clone)]
 pub enum Protocol {
     Tunnel,
-    PublicKey,
+    NodeContext,
 }
 
 impl Protocol {
     pub fn symbol_byte(&self) -> u8 {
         match &self {
             Protocol::Tunnel => TUNNEL,
-            Protocol::PublicKey => PUBLIC_KEY,
+            Protocol::NodeContext => NODE_CONTEXT,
         }
     }
 
@@ -27,7 +27,7 @@ impl Protocol {
 
         match symbol_byte {
             TUNNEL => Ok(Protocol::Tunnel),
-            PUBLIC_KEY => Ok(Protocol::PublicKey),
+            NODE_CONTEXT => Ok(Protocol::NodeContext),
             _ => bail!("Protocol error. Unknown symbol byte {}", symbol_byte),
         }
     }
