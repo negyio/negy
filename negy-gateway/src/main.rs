@@ -8,9 +8,9 @@ use anyhow::Result;
 use clap::Parser;
 use negy_node_pool::req::ListNodeResponse;
 use openssl::rsa::Rsa;
+use semver::Version;
 use std::sync::{Arc, RwLock};
 use tokio::net::{TcpListener, TcpStream};
-use semver::Version;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -25,6 +25,7 @@ struct Args {
     hops: usize,
     #[clap(short, long, value_parser)]
     auth_token: Option<String>,
+    #[clap(short, long, value_parser)]
     min_version: Option<String>,
 }
 
@@ -43,7 +44,10 @@ async fn spawn_inner(
 
     Ok(())
 }
-async fn fetch_nodes_unselected(node_pool_endpoint: &str, min_version: &Option<String>) -> Result<Vec<NodeUnselected>> {
+async fn fetch_nodes_unselected(
+    node_pool_endpoint: &str,
+    min_version: &Option<String>,
+) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
         .send()
@@ -60,10 +64,10 @@ async fn fetch_nodes_unselected(node_pool_endpoint: &str, min_version: &Option<S
             version: n.version,
         })
         .filter(|n| {
-           if let Some(min_version) = &min_version {
+            if let Some(min_version) = &min_version {
                 Version::parse(&n.version).unwrap() >= Version::parse(min_version).unwrap()
             } else {
-                 true
+                true
             }
         })
         .collect();
@@ -138,7 +142,7 @@ async fn main() -> Result<()> {
         args.node_pool_endpoint,
         args.hops,
         args.auth_token,
-        args.min_version
+        args.min_version,
     )
     .await?;
 
