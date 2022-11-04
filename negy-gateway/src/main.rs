@@ -27,6 +27,8 @@ struct Args {
     auth_token: Option<String>,
     #[clap(short, long, value_parser)]
     min_version: Option<String>,
+    #[clap(long, value_parser)]
+    block_network: Option<String>,
 }
 
 async fn spawn_inner(
@@ -47,6 +49,7 @@ async fn spawn_inner(
 async fn fetch_nodes_unselected(
     node_pool_endpoint: &str,
     min_version: &Option<String>,
+    block_network:&Option<String>,
 ) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
@@ -70,6 +73,13 @@ async fn fetch_nodes_unselected(
                 true
             }
         })
+        .filter(|n|{
+            if let Some(block_network) =  &block_network {
+                block_network.contains(&*block_network)
+            } else {
+                true
+            }
+        })
         .collect();
 
     Ok(nodes_unselected)
@@ -81,6 +91,7 @@ async fn spawn(
     hops: usize,
     auth_token: Option<String>,
     min_version: Option<String>,
+    block_network: Option<String>,
 ) -> Result<()> {
     let listed_nodes: Arc<RwLock<Vec<NodeUnselected>>> = Arc::new(RwLock::new(Vec::new()));
     let listed_nodes_fetch = listed_nodes.clone();
@@ -88,7 +99,7 @@ async fn spawn(
 
     tokio::spawn(async move {
         loop {
-            match fetch_nodes_unselected(&node_pool_endpoint, &min_version).await {
+            match fetch_nodes_unselected(&node_pool_endpoint, &min_version, &block_network).await {
                 Ok(nodes_unselected) => {
                     info!("fetched {} nodes", nodes_unselected.len());
                     *listed_nodes_fetch.write().unwrap() = nodes_unselected;
@@ -143,6 +154,7 @@ async fn main() -> Result<()> {
         args.hops,
         args.auth_token,
         args.min_version,
+        args.block_network,
     )
     .await?;
 
