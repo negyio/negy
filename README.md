@@ -11,7 +11,7 @@
   <a href="https://negy.io"><img src="https://img.shields.io/badge/Docs-negy.io-green"/></a>
 <p align="center">
 
-**Negy is a proxy that conceals the routing of HTTP requests in a similar way to Tor; through Negy's network, websites have no way of identifying who has accessed them at the network level. It is possible to try Negy with the following commands.**
+**Negy is a L4 proxy that defends your privacy transparently. It's following Tor protocol but not compatible. You can try Negy by the command below.**
 
 ```bash
 curl https://example.com -x http://gateway.negy.io
@@ -19,10 +19,10 @@ curl https://example.com -x http://gateway.negy.io
 
 ## Features
 
-- :white_check_mark: Secure routing
-- :white_check_mark: Configure as proxy
-- :white_check_mark: High portability
-- :white_check_mark: Fault tolerance
+- :white_check_mark: Secure http tunneling as L4 proxy following Tor protocol
+- :white_check_mark: Stick to network layer. It doesn't interfere with the UX of the application
+- :white_check_mark: Dark web is not our target. Everybody can aquire the secure routing
+- :white_check_mark: Written in Rust
 
 Want to know about Negy? Visit [negy.io](https://negy.io)!
 
