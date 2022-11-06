@@ -69,12 +69,16 @@ async fn fetch_nodes_unselected(
         .filter(|n| {
             if let Some(min_version) = &min_version {
                 Version::parse(&n.version).unwrap() >= Version::parse(min_version).unwrap()
-            } else {true}
+            } else {
+                true
+            }
         })
-        .filter(|n| {
+        .filter(|_| {
             if let Some(block_network) = &block_network {
-                block_network[0..block_network.len()].contains(block_network)
-            } else {true}
+                block_network.split(",").collect::<Vec<_>>()[0..block_network.len()].contains(&&block_network[0..block_network.len()])
+            } else {
+                true
+            }
         })
         .collect();
 
