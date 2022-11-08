@@ -73,9 +73,9 @@ async fn fetch_nodes_unselected(
                 true
             }
         })
-        .filter(|_| {
-            if let Some(block_network) = &block_network {
-                block_network.split(",").collect::<Vec<_>>()[0..block_network.len()].contains(&&block_network[0..block_network.len()])
+        .filter(|n| {
+            if let (Some(name), Some(block_network)) = (&n.name, &block_network) {
+                block_network.split(",").collect::<Vec<_>>().contains(&name.as_str())
             } else {
                 true
             }
