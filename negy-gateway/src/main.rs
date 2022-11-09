@@ -49,7 +49,7 @@ async fn spawn_inner(
 async fn fetch_nodes_unselected(
     node_pool_endpoint: &str,
     min_version: &Option<String>,
-    block_network:&Option<String>,
+    block_network: &Option<String>,
 ) -> Result<Vec<NodeUnselected>> {
     let res = reqwest::Client::new()
         .get(format!("{}/list", node_pool_endpoint))
@@ -75,7 +75,10 @@ async fn fetch_nodes_unselected(
         })
         .filter(|n| {
             if let (Some(name), Some(block_network)) = (&n.name, &block_network) {
-                block_network.split(",").collect::<Vec<_>>().contains(&name.as_str())
+                block_network
+                    .split(",")
+                    .collect::<Vec<_>>()
+                    .contains(&name.as_str())
             } else {
                 true
             }
