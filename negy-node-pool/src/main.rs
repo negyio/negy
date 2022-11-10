@@ -131,7 +131,7 @@ async fn healthcheck_node(addr: &SocketAddr, public_key: &str, version: &str) ->
     }
 
     if version != version_received {
-        bail!("version mismatch")
+        bail!("version mismatch ({} vs {})", version, version_received)
     }
 
     Ok(())
