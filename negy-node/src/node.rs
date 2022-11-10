@@ -66,9 +66,12 @@ impl Node<StateAccepted> {
     pub async fn serve_context(mut self) -> Result<()> {
         let (_, mut c_tx) = self.state.client.split();
         let version: &str = env!("CARGO_PKG_VERSION");
+        let mut payload: Vec<u8> = Vec::new();
 
-        c_tx.write_all(&self.state.rsa.public_key_to_pem()?).await?;
-        c_tx.write_all(version.as_bytes()).await?;
+        payload.extend_from_slice(&self.state.rsa.public_key_to_pem()?);
+        payload.extend_from_slice(version.as_bytes());
+
+        c_tx.write_all(&payload).await?;
 
         Ok(())
     }

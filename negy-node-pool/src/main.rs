@@ -131,7 +131,7 @@ async fn healthcheck_node(addr: &SocketAddr, public_key: &str, version: &str) ->
     }
 
     if version != version_received {
-        bail!("version mismatch")
+        bail!("version mismatch ({} vs {})", version, version_received)
     }
 
     Ok(())
@@ -143,7 +143,8 @@ async fn healthcheck_loop(node_pool: Arc<RwLock<HashMap<SocketAddr, Node>>>) -> 
         let node_pool_for_iter = node_pool.read().unwrap().clone();
 
         for (addr, node) in node_pool_for_iter.iter() {
-            if let Err(_) = healthcheck_node(addr, &node.public_key, &node.version).await {
+            if let Err(e) = healthcheck_node(addr, &node.public_key, &node.version).await {
+                warn!("removing reason={:?}", e);
                 node_pool.write().unwrap().remove(addr);
                 removed_count += 1;
             }
