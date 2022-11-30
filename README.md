@@ -14,6 +14,10 @@
 **Negy is a L4 proxy that defends your privacy transparently. It's following Tor protocol but not compatible. You can try Negy by the command below.**
 
 ```bash
+# Sorry, currently this command would not work since public endpoint is closed.
+# If you're interested in Negy, try to build your own network.
+# => See https://negy.io/docs/contribution/development_contribution
+
 curl https://example.com -x http://gateway.negy.io
 ```
 
